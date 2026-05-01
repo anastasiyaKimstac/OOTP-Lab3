@@ -9,4 +9,8 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FriendPlugin\FriendPlugin.csproj" />
+  </ItemGroup>
+
 </Project>

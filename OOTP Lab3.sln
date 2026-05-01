@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Base64EncodingPlugin", "Bas
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XOREncryptionPlugin", "XOREncryptionPlugin\XOREncryptionPlugin.csproj", "{EE44CFD5-04ED-4829-AA7B-53486670CBA1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FriendPlugin", "FriendPlugin\FriendPlugin.csproj", "{03F0A279-6A18-403C-A70E-B3E71196089A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{EE44CFD5-04ED-4829-AA7B-53486670CBA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE44CFD5-04ED-4829-AA7B-53486670CBA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE44CFD5-04ED-4829-AA7B-53486670CBA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03F0A279-6A18-403C-A70E-B3E71196089A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03F0A279-6A18-403C-A70E-B3E71196089A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03F0A279-6A18-403C-A70E-B3E71196089A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03F0A279-6A18-403C-A70E-B3E71196089A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

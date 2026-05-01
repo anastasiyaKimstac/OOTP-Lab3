@@ -1,4 +1,11 @@
-﻿using System;
+﻿using FriendPlugin;
+using OOTP_Lab3.Adapters;
+using OOTP_Lab3.Contracts;
+using OOTP_Lab3.Models;
+using OOTP_Lab3.Patterns;
+using OOTP_Lab3.PluginHost;
+using OOTP_Lab3.Serialization;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -6,10 +13,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using OOTP_Lab3.Contracts;
-using OOTP_Lab3.Models;
-using OOTP_Lab3.PluginHost;
-using OOTP_Lab3.Serialization;
 
 namespace OOTP_Lab3
 {
@@ -17,7 +20,8 @@ namespace OOTP_Lab3
     {
         private readonly TextDeserializer _deserializer = new TextDeserializer();
         private readonly PluginManager _pluginManager;
-
+        private EmployeeSubject _subject = new EmployeeSubject();
+        private FriendPluginAdapter _friendAdapter;
         public PluginManager PluginManager => _pluginManager;
 
         public ObservableCollection<IEmployee> Employees { get; set; } = new ObservableCollection<IEmployee>();
@@ -74,6 +78,8 @@ namespace OOTP_Lab3
             set { _pluginStatus = value; OnPropertyChanged(); }
         }
 
+        
+
         // Active data processor
         private IDataProcessor _activeProcessor;
         public IDataProcessor ActiveProcessor
@@ -104,6 +110,14 @@ namespace OOTP_Lab3
             _pluginManager.LoadAllPlugins(this);
 
             PluginStatus = $"Loaded {_pluginManager.LoadedPlugins.Count} plugins";
+
+            var friendPlugin = new FriendPlugin.ReverseEncryptor();
+            _friendAdapter = new FriendPluginAdapter(friendPlugin);
+            RegisterDataProcessor(_friendAdapter);
+            ProcessorMenuItems.Add(_friendAdapter.GetUIElement());
+
+            // Observer pattern usage (1 line)
+            _subject.Attach(new LoggerObserver());
         }
 
         private void OnPluginLoaded(object sender, IPlugin plugin)
@@ -254,6 +268,7 @@ namespace OOTP_Lab3
                 Employees.Add(emp);
                 SelectedEmployee = emp;
             }
+            _subject.Notify($"Employee added: {emp.Name}");
         }
 
         private IEmployee TryCreatePluginEmployee(string typeName)
@@ -282,8 +297,10 @@ namespace OOTP_Lab3
         {
             if (SelectedEmployee != null)
             {
+                var empToDelete = SelectedEmployee; 
                 Employees.Remove(SelectedEmployee);
                 SelectedEmployee = Employees.FirstOrDefault();
+                _subject.Notify($"Employee deleted: {empToDelete.Name}");
             }
         }
 
