@@ -5,19 +5,27 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using OOTP_Lab3.Contracts;
 using OOTP_Lab3.Models;
+using OOTP_Lab3.PluginHost;
 using OOTP_Lab3.Serialization;
 
 namespace OOTP_Lab3
 {
     /// <summary>
-    /// Main ViewModel handling all business logic and UI state
+    /// Main ViewModel handling all business logic and UI state with plugin support
     /// </summary>
-    public class MainViewModel : INotifyPropertyChanged
+    public class MainViewModel : INotifyPropertyChanged, IPluginHost
     {
         private readonly TextDeserializer _deserializer = new TextDeserializer();
+        private readonly PluginManager _pluginManager;
 
         public ObservableCollection<IEmployee> Employees { get; set; } = new ObservableCollection<IEmployee>();
+
+        /// <summary>
+        /// Collection of plugin UI elements to display
+        /// </summary>
+        public ObservableCollection<UIElement> PluginButtons { get; set; } = new ObservableCollection<UIElement>();
 
         private IEmployee _selectedEmployee;
         public IEmployee SelectedEmployee
@@ -86,9 +94,55 @@ namespace OOTP_Lab3
 
         public bool ShowProp2 => !string.IsNullOrEmpty(Prop2Label);
 
+        // Additional properties for SeniorDeveloper support
+        private string _prop3Label = "";
+        private string _prop3Value = "";
+        private bool _showProp3 = false;
+
+        public string Prop3Label
+        {
+            get => _prop3Label;
+            set { _prop3Label = value; OnPropertyChanged(); }
+        }
+
+        public string Prop3Value
+        {
+            get => _prop3Value;
+            set { _prop3Value = value; OnPropertyChanged(); }
+        }
+
+        public bool ShowProp3
+        {
+            get => _showProp3;
+            set { _showProp3 = value; OnPropertyChanged(); }
+        }
+
         public MainViewModel()
         {
             LoadSampleData();
+
+            // Initialize plugin manager
+            _pluginManager = new PluginManager();
+            _pluginManager.PluginLoaded += OnPluginLoaded;
+
+            // Load all plugins
+            _pluginManager.LoadAllPlugins(this);
+        }
+
+        private void OnPluginLoaded(object sender, IPlugin plugin)
+        {
+            // Add plugin UI elements to the toolbar
+            var uiElement = plugin.GetUIElement();
+            if (uiElement != null)
+            {
+                PluginButtons.Add(uiElement);
+            }
+
+            // Additional plugin UI can be added here
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ShowMessage($"Plugin '{plugin.PluginName}' loaded successfully!", "Plugin Loaded");
+            });
         }
 
         private void LoadSampleData()
@@ -107,6 +161,9 @@ namespace OOTP_Lab3
             EditName = SelectedEmployee.Name;
             EditSalary = SelectedEmployee.Salary;
             EditExperience = SelectedEmployee.YearsOfExperience;
+
+            // Reset additional properties
+            ShowProp3 = false;
 
             switch (SelectedEmployee)
             {
@@ -140,6 +197,17 @@ namespace OOTP_Lab3
                     Prop2Label = "Semester";
                     Prop2Value = i.Semester.ToString();
                     break;
+                // Support for plugin-added employee types
+                case dynamic dyn when dyn.GetType().Name == "SeniorDeveloper":
+                    var seniorDev = SelectedEmployee;
+                    Prop1Label = "Main Language";
+                    Prop1Value = seniorDev.GetType().GetProperty("MainLanguage")?.GetValue(seniorDev)?.ToString() ?? "";
+                    Prop2Label = "Projects Completed";
+                    Prop2Value = seniorDev.GetType().GetProperty("ProjectsCompleted")?.GetValue(seniorDev)?.ToString() ?? "";
+                    Prop3Label = "Specialization";
+                    Prop3Value = seniorDev.GetType().GetProperty("Specialization")?.GetValue(seniorDev)?.ToString() ?? "";
+                    ShowProp3 = true;
+                    break;
             }
         }
 
@@ -172,6 +240,13 @@ namespace OOTP_Lab3
                 case Intern i:
                     i.University = Prop1Value;
                     i.Semester = int.Parse(Prop2Value);
+                    break;
+                // Handle plugin types
+                case dynamic dyn when dyn.GetType().Name == "SeniorDeveloper":
+                    var seniorDev = SelectedEmployee;
+                    seniorDev.GetType().GetProperty("MainLanguage")?.SetValue(seniorDev, Prop1Value);
+                    seniorDev.GetType().GetProperty("ProjectsCompleted")?.SetValue(seniorDev, int.Parse(Prop2Value));
+                    seniorDev.GetType().GetProperty("Specialization")?.SetValue(seniorDev, Prop3Value);
                     break;
             }
 
@@ -269,6 +344,42 @@ namespace OOTP_Lab3
             SelectedEmployee = null;
             SelectedEmployee = selected;
             OnPropertyChanged(nameof(Employees));
+        }
+
+        // IPluginHost implementation
+        public void AddEmployee(IEmployee employee)
+        {
+            Employees.Add(employee);
+        }
+
+        public void RemoveEmployee(IEmployee employee)
+        {
+            Employees.Remove(employee);
+        }
+
+        public ObservableCollection<IEmployee> GetEmployees()
+        {
+            return Employees;
+        }
+
+        public void ShowMessage(string message, string title)
+        {
+            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        public void SelectEmployee(IEmployee employee)
+        {
+            SelectedEmployee = employee;
+        }
+
+        public void SerializeToFile(string path)
+        {
+            SaveToFile(path);
+        }
+
+        public void DeserializeFromFile(string path)
+        {
+            LoadFromFile(path);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
