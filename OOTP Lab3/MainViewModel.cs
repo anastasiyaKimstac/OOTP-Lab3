@@ -22,6 +22,7 @@ namespace OOTP_Lab3
         private readonly PluginManager _pluginManager;
         private EmployeeSubject _subject = new EmployeeSubject();
         private FriendPluginAdapter _friendAdapter;
+
         public PluginManager PluginManager => _pluginManager;
 
         public ObservableCollection<IEmployee> Employees { get; set; } = new ObservableCollection<IEmployee>();
@@ -78,8 +79,6 @@ namespace OOTP_Lab3
             set { _pluginStatus = value; OnPropertyChanged(); }
         }
 
-        
-
         // Active data processor
         private IDataProcessor _activeProcessor;
         public IDataProcessor ActiveProcessor
@@ -111,13 +110,48 @@ namespace OOTP_Lab3
 
             PluginStatus = $"Loaded {_pluginManager.LoadedPlugins.Count} plugins";
 
-            var friendPlugin = new FriendPlugin.ReverseEncryptor();
-            _friendAdapter = new FriendPluginAdapter(friendPlugin);
-            RegisterDataProcessor(_friendAdapter);
-            ProcessorMenuItems.Add(_friendAdapter.GetUIElement());
+            // Load friend's plugin with adapter - will be added LAST
+            try
+            {
+                var friendPlugin = new ReverseEncryptor();
+                _friendAdapter = new FriendPluginAdapter(friendPlugin);
 
-            // Observer pattern usage (1 line)
+                // CRITICAL FIX: Initialize the adapter with host reference
+                _friendAdapter.Initialize(this);  // ← ADD THIS LINE!
+
+                RegisterDataProcessor(_friendAdapter);
+
+                // Delayed addition to ensure it appears LAST in menu
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    var menuItem = _friendAdapter.GetUIElement();
+                    if (menuItem != null)
+                    {
+                        ProcessorMenuItems.Add(menuItem);
+                        System.Diagnostics.Debug.WriteLine("[Adapter] Friend plugin added LAST to menu");
+
+                        // Optional: Also add to toolbar
+                        var toolbarButton = _friendAdapter.GetToolbarButton();
+                        if (toolbarButton != null)
+                        {
+                            PluginButtons.Add(toolbarButton);
+                            System.Diagnostics.Debug.WriteLine("[Adapter] Friend plugin added to toolbar");
+                        }
+                    }
+                }), System.Windows.Threading.DispatcherPriority.Background);
+
+                System.Diagnostics.Debug.WriteLine("[Adapter] Friend plugin loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Adapter] Failed to load friend plugin: {ex.Message}");
+            }
+
+            // Observer pattern usage
             _subject.Attach(new LoggerObserver());
+
+            // Log initial state
+            _subject.Notify("Application started");
         }
 
         private void OnPluginLoaded(object sender, IPlugin plugin)
@@ -129,11 +163,11 @@ namespace OOTP_Lab3
                 {
                     if (plugin.PluginId == "SeniorDeveloperPlugin")
                     {
-                        PluginButtons.Insert(0, uiElement);  
+                        PluginButtons.Insert(0, uiElement);
                     }
                     else
                     {
-                        PluginButtons.Add(uiElement); 
+                        PluginButtons.Add(uiElement);
                     }
 
                     PluginStatus = $"Loaded {_pluginManager.LoadedPlugins.Count} plugins";
@@ -151,9 +185,8 @@ namespace OOTP_Lab3
                 if (menuItem != null)
                 {
                     ProcessorMenuItems.Add(menuItem);
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Processor added: {processor.PluginName}, Total: {ProcessorMenuItems.Count}");
                 }
-
-                //ShowMessage($"Data processor '{processor.PluginName}' loaded!", "Processor Loaded");
             });
         }
 
@@ -227,6 +260,8 @@ namespace OOTP_Lab3
         {
             if (SelectedEmployee == null) return;
 
+            string oldName = SelectedEmployee.Name;
+
             SelectedEmployee.Name = EditName;
             SelectedEmployee.Salary = EditSalary;
             SelectedEmployee.YearsOfExperience = EditExperience;
@@ -247,9 +282,10 @@ namespace OOTP_Lab3
             }
 
             RefreshList();
-        }
 
-        
+            // Observer notification
+            _subject.Notify($"Employee changed: {oldName} → {SelectedEmployee.Name}");
+        }
 
         public void AddEmployee(string type)
         {
@@ -267,8 +303,8 @@ namespace OOTP_Lab3
             {
                 Employees.Add(emp);
                 SelectedEmployee = emp;
+                _subject.Notify($"Employee added: {emp.Name} ({emp.EmployeeType})");
             }
-            _subject.Notify($"Employee added: {emp.Name}");
         }
 
         private IEmployee TryCreatePluginEmployee(string typeName)
@@ -297,7 +333,7 @@ namespace OOTP_Lab3
         {
             if (SelectedEmployee != null)
             {
-                var empToDelete = SelectedEmployee; 
+                var empToDelete = SelectedEmployee;
                 Employees.Remove(SelectedEmployee);
                 SelectedEmployee = Employees.FirstOrDefault();
                 _subject.Notify($"Employee deleted: {empToDelete.Name}");
@@ -311,10 +347,8 @@ namespace OOTP_Lab3
                 var serializer = new TextSerializer();
                 var lines = Employees.Select(e => serializer.SerializeDynamic(e));
 
-                // Combine all data into a single string
                 var allData = string.Join(Environment.NewLine, lines);
 
-                // Apply processor before saving
                 if (ActiveProcessor != null && ActiveProcessor.IsEnabled)
                 {
                     allData = ActiveProcessor.ProcessBeforeSave(allData);
@@ -323,6 +357,7 @@ namespace OOTP_Lab3
 
                 File.WriteAllText(path, allData);
                 MessageBox.Show($"Successfully saved {Employees.Count} employees", "Success");
+                _subject.Notify($"Saved {Employees.Count} employees to {Path.GetFileName(path)}");
             }
             catch (Exception ex)
             {
@@ -338,14 +373,12 @@ namespace OOTP_Lab3
             {
                 var allData = File.ReadAllText(path);
 
-                // Apply processor after loading
                 if (ActiveProcessor != null && ActiveProcessor.IsEnabled)
                 {
                     allData = ActiveProcessor.ProcessAfterLoad(allData);
                     ShowMessage($"Data decrypted with {ActiveProcessor.PluginName}", "Decryption Applied");
                 }
 
-                // Разделяем по строкам, убираем пустые
                 var lines = allData.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                 var newList = new ObservableCollection<IEmployee>();
 
@@ -362,7 +395,6 @@ namespace OOTP_Lab3
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"Failed to deserialize line: {ex.Message}");
-                        System.Diagnostics.Debug.WriteLine($"Line: {line}");
                     }
                 }
 
@@ -375,6 +407,7 @@ namespace OOTP_Lab3
                     }
                     SelectedEmployee = Employees.FirstOrDefault();
                     MessageBox.Show($"Successfully loaded {newList.Count} employees", "Success");
+                    _subject.Notify($"Loaded {newList.Count} employees from {Path.GetFileName(path)}");
                 }
                 else
                 {
@@ -399,6 +432,7 @@ namespace OOTP_Lab3
             if (processor != null)
             {
                 ShowMessage($"Active processor set to: {processor.PluginName}", "Processor Changed");
+                _subject.Notify($"Active processor changed to: {processor.PluginName}");
             }
         }
 
@@ -415,7 +449,6 @@ namespace OOTP_Lab3
             }
 
             SelectedEmployee = selected;
-
             OnPropertyChanged(nameof(Employees));
         }
 
@@ -426,6 +459,7 @@ namespace OOTP_Lab3
             {
                 Employees.Add(employee);
                 PluginStatus = $"Total employees: {Employees.Count}";
+                _subject.Notify($"Employee added via plugin: {employee.Name}");
             }
         }
 
@@ -435,6 +469,7 @@ namespace OOTP_Lab3
             {
                 Employees.Remove(employee);
                 PluginStatus = $"Total employees: {Employees.Count}";
+                _subject.Notify($"Employee removed via plugin: {employee.Name}");
             }
         }
 
@@ -474,8 +509,6 @@ namespace OOTP_Lab3
         {
             return ActiveProcessor;
         }
-
-        
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)

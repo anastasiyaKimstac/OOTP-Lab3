@@ -4,6 +4,7 @@ namespace FriendPlugin
 {
     /// <summary>
     /// Friend's implementation - Simple Reverse encryption
+    /// This is the actual plugin received from a classmate
     /// </summary>
     public class ReverseEncryptor : IFriendEncryptor
     {
@@ -11,12 +12,12 @@ namespace FriendPlugin
 
         public string Encrypt(string text)
         {
-            if (string.IsNullOrEmpty(text)) return text; 
+            if (string.IsNullOrEmpty(text)) return text;
             char[] arr = text.ToCharArray();
             Array.Reverse(arr);
             return new string(arr);
         }
 
-        public string Decrypt(string text) => Encrypt(text);
+        public string Decrypt(string text) => Encrypt(text); // Reverse is symmetric
     }
 }
