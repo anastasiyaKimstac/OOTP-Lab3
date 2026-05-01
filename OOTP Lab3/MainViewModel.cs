@@ -113,7 +113,15 @@ namespace OOTP_Lab3
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    PluginButtons.Add(uiElement);
+                    if (plugin.PluginId == "SeniorDeveloperPlugin")
+                    {
+                        PluginButtons.Insert(0, uiElement);  
+                    }
+                    else
+                    {
+                        PluginButtons.Add(uiElement); 
+                    }
+
                     PluginStatus = $"Loaded {_pluginManager.LoadedPlugins.Count} plugins";
                 });
             }
@@ -131,7 +139,7 @@ namespace OOTP_Lab3
                     ProcessorMenuItems.Add(menuItem);
                 }
 
-                ShowMessage($"Data processor '{processor.PluginName}' loaded!", "Processor Loaded");
+                //ShowMessage($"Data processor '{processor.PluginName}' loaded!", "Processor Loaded");
             });
         }
 
@@ -227,6 +235,8 @@ namespace OOTP_Lab3
             RefreshList();
         }
 
+        
+
         public void AddEmployee(string type)
         {
             IEmployee emp = type switch
@@ -309,7 +319,6 @@ namespace OOTP_Lab3
 
             try
             {
-                // Read all data
                 var allData = File.ReadAllText(path);
 
                 // Apply processor after loading
@@ -319,11 +328,14 @@ namespace OOTP_Lab3
                     ShowMessage($"Data decrypted with {ActiveProcessor.PluginName}", "Decryption Applied");
                 }
 
-                var lines = allData.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                // Разделяем по строкам, убираем пустые
+                var lines = allData.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                 var newList = new ObservableCollection<IEmployee>();
 
-                foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l)))
+                foreach (var line in lines)
                 {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
                     try
                     {
                         var employee = _deserializer.Deserialize(line);
@@ -333,15 +345,23 @@ namespace OOTP_Lab3
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"Failed to deserialize line: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Line: {line}");
                     }
                 }
 
                 if (newList.Any())
                 {
                     Employees.Clear();
-                    foreach (var emp in newList) Employees.Add(emp);
+                    foreach (var emp in newList)
+                    {
+                        Employees.Add(emp);
+                    }
                     SelectedEmployee = Employees.FirstOrDefault();
                     MessageBox.Show($"Successfully loaded {newList.Count} employees", "Success");
+                }
+                else
+                {
+                    MessageBox.Show("No valid employees found in file", "Warning");
                 }
             }
             catch (Exception ex)
@@ -350,11 +370,35 @@ namespace OOTP_Lab3
             }
         }
 
+        public void SetActiveDataProcessor(IDataProcessor processor)
+        {
+            if (ActiveProcessor != null && ActiveProcessor != processor)
+            {
+                ActiveProcessor.IsEnabled = false;
+            }
+
+            ActiveProcessor = processor;
+
+            if (processor != null)
+            {
+                ShowMessage($"Active processor set to: {processor.PluginName}", "Processor Changed");
+            }
+        }
+
         private void RefreshList()
         {
             var selected = SelectedEmployee;
-            SelectedEmployee = null;
+
+            var currentList = Employees.ToList();
+            Employees.Clear();
+
+            foreach (var emp in currentList)
+            {
+                Employees.Add(emp);
+            }
+
             SelectedEmployee = selected;
+
             OnPropertyChanged(nameof(Employees));
         }
 
@@ -414,17 +458,7 @@ namespace OOTP_Lab3
             return ActiveProcessor;
         }
 
-        public void SetActiveDataProcessor(IDataProcessor processor)
-        {
-            // Disable previously active processor
-            if (ActiveProcessor != null && ActiveProcessor != processor)
-            {
-                ActiveProcessor.IsEnabled = false;
-            }
-
-            ActiveProcessor = processor;
-            ShowMessage($"Active processor set to: {processor.PluginName}", "Processor Changed");
-        }
+        
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)

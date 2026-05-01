@@ -69,7 +69,7 @@ namespace OOTP_Lab3.PluginHost
                         DataProcessorLoaded?.Invoke(this, dataProcessor);
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"Loaded plugin: {plugin.PluginName} v{plugin.Version}");
+                    //System.Diagnostics.Debug.WriteLine($"Loaded plugin: {plugin.PluginName} v{plugin.Version}");
                 }
 
                 return true;
