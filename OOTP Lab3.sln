@@ -7,6 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOTP Lab3", "OOTP Lab3\OOTP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeniorDeveloperPlugin", "SeniorDeveloperPlugin\SeniorDeveloperPlugin.csproj", "{58337769-9BCD-4640-8937-907E22A60978}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ROT13EncryptionPlugin", "ROT13EncryptionPlugin\ROT13EncryptionPlugin.csproj", "{5A37F876-D5DA-4236-A21A-197BA910C940}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Base64EncodingPlugin", "Base64EncodingPlugin\Base64EncodingPlugin.csproj", "{5CB7B765-6DBD-43FA-AF53-9CC938221C65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XOREncryptionPlugin", "XOREncryptionPlugin\XOREncryptionPlugin.csproj", "{EE44CFD5-04ED-4829-AA7B-53486670CBA1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +27,18 @@ Global
 		{58337769-9BCD-4640-8937-907E22A60978}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58337769-9BCD-4640-8937-907E22A60978}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58337769-9BCD-4640-8937-907E22A60978}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A37F876-D5DA-4236-A21A-197BA910C940}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A37F876-D5DA-4236-A21A-197BA910C940}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A37F876-D5DA-4236-A21A-197BA910C940}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A37F876-D5DA-4236-A21A-197BA910C940}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CB7B765-6DBD-43FA-AF53-9CC938221C65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CB7B765-6DBD-43FA-AF53-9CC938221C65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CB7B765-6DBD-43FA-AF53-9CC938221C65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CB7B765-6DBD-43FA-AF53-9CC938221C65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE44CFD5-04ED-4829-AA7B-53486670CBA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE44CFD5-04ED-4829-AA7B-53486670CBA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE44CFD5-04ED-4829-AA7B-53486670CBA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE44CFD5-04ED-4829-AA7B-53486670CBA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

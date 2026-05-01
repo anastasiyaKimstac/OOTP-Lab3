@@ -8,9 +8,6 @@ using OOTP_Lab3.Serialization;
 
 namespace OOTP_Lab3.PluginHost
 {
-    /// <summary>
-    /// Manages dynamic loading and unloading of plugins
-    /// </summary>
     public class PluginManager
     {
         private readonly List<IPlugin> _loadedPlugins = new List<IPlugin>();
@@ -19,10 +16,8 @@ namespace OOTP_Lab3.PluginHost
 
         public IReadOnlyList<IPlugin> LoadedPlugins => _loadedPlugins;
 
-        /// <summary>
-        /// Event fired when a plugin is loaded
-        /// </summary>
         public event EventHandler<IPlugin> PluginLoaded;
+        public event EventHandler<IDataProcessor> DataProcessorLoaded;
 
         public PluginManager(string pluginsDirectory = "Plugins")
         {
@@ -35,9 +30,6 @@ namespace OOTP_Lab3.PluginHost
             }
         }
 
-        /// <summary>
-        /// Load all plugins from the plugins directory
-        /// </summary>
         public void LoadAllPlugins(IPluginHost host)
         {
             if (!Directory.Exists(_pluginsDirectory))
@@ -55,9 +47,6 @@ namespace OOTP_Lab3.PluginHost
             _deserializer.ScanAndRegisterPluginDeserializers();
         }
 
-        /// <summary>
-        /// Load a plugin from a specific file path
-        /// </summary>
         public bool LoadPluginFromFile(string filePath, IPluginHost host)
         {
             try
@@ -73,7 +62,14 @@ namespace OOTP_Lab3.PluginHost
                     _loadedPlugins.Add(plugin);
                     PluginLoaded?.Invoke(this, plugin);
 
-                    
+                    // Check if this is also a data processor
+                    if (plugin is IDataProcessor dataProcessor)
+                    {
+                        host.RegisterDataProcessor(dataProcessor);
+                        DataProcessorLoaded?.Invoke(this, dataProcessor);
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"Loaded plugin: {plugin.PluginName} v{plugin.Version}");
                 }
 
                 return true;
@@ -85,9 +81,6 @@ namespace OOTP_Lab3.PluginHost
             }
         }
 
-        /// <summary>
-        /// Unload a specific plugin
-        /// </summary>
         public bool UnloadPlugin(IPlugin plugin)
         {
             try
@@ -101,6 +94,21 @@ namespace OOTP_Lab3.PluginHost
                 System.Diagnostics.Debug.WriteLine($"Failed to unload plugin {plugin.PluginName}: {ex.Message}");
                 return false;
             }
+        }
+
+        public bool LoadPluginFromUserSelectedFile(IPluginHost host)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Plugin Files (*.dll)|*.dll",
+                Title = "Select Plugin DLL"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                return LoadPluginFromFile(dialog.FileName, host);
+            }
+            return false;
         }
     }
 }

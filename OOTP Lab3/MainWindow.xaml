@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OOTP_Lab3"
         mc:Ignorable="d"
-        Title="OOTP_Lab3 - Employee Manager with Plugins" Height="600" Width="900" 
+        Title="OOTP Lab5 - Employee Manager with Data Processing" Height="650" Width="900" 
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
@@ -17,139 +17,167 @@
         <local:MainViewModel/>
     </Window.DataContext>
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Save to File" Click="SaveFile_Click"/>
+                <MenuItem Header="_Load from File" Click="LoadFile_Click"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="Exit_Click"/>
+            </MenuItem>
 
-        <!-- Plugin Toolbar -->
-        <Border Grid.Row="0" Margin="0,0,0,10" Padding="5" Background="#F0F0F0" CornerRadius="5">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Base Types:" VerticalAlignment="Center" Margin="5" FontWeight="Bold"/>
-                <Button Content="Manager" Width="70" Margin="2" Click="Add_Click"/>
-                <Button Content="Developer" Width="70" Margin="2" Click="Add_Click"/>
-                <Button Content="Designer" Width="70" Margin="2" Click="Add_Click"/>
-                <Button Content="Tester" Width="60" Margin="2" Click="Add_Click"/>
-                <Button Content="Intern" Width="60" Margin="2" Click="Add_Click"/>
+            <MenuItem Header="_Settings">
+                <MenuItem Header="_Data Processors" ItemsSource="{Binding ProcessorMenuItems}"/>
+                <Separator/>
+                <MenuItem Header="_Load Plugin from File..." Click="LoadPlugin_Click"/>
+                <MenuItem Header="Clear _Data Processor" Click="ClearProcessor_Click"/>
+            </MenuItem>
 
-                <Separator Width="20" VerticalAlignment="Center"/>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" Click="About_Click"/>
+                <MenuItem Header="Active Processor:" IsEnabled="False"/>
+                <MenuItem Header="{Binding ActiveProcessorName}" IsEnabled="False" FontWeight="Bold"/>
+            </MenuItem>
+        </Menu>
 
-                <TextBlock Text="Plugins:" VerticalAlignment="Center" Margin="5" FontWeight="Bold"
-                           Visibility="{Binding PluginButtons.Count, Converter={StaticResource CountToVis}}"/>
-                <ItemsControl ItemsSource="{Binding PluginButtons}" Margin="2">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-            </StackPanel>
-        </Border>
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="320"/>
-            </Grid.ColumnDefinitions>
+            <!-- Plugin Toolbar -->
+            <Border Grid.Row="0" Margin="0,0,0,10" Padding="5" Background="#F0F0F0" CornerRadius="5">
+                <WrapPanel>
+                    <TextBlock Text="Base Types:" VerticalAlignment="Center" Margin="5" FontWeight="Bold"/>
+                    <Button Content="Manager" Width="70" Margin="2" Click="Add_Click"/>
+                    <Button Content="Developer" Width="70" Margin="2" Click="Add_Click"/>
+                    <Button Content="Designer" Width="70" Margin="2" Click="Add_Click"/>
+                    <Button Content="Tester" Width="60" Margin="2" Click="Add_Click"/>
+                    <Button Content="Intern" Width="60" Margin="2" Click="Add_Click"/>
 
-            <!-- Left Panel - Employee List -->
-            <Border Grid.Column="0" Margin="0,0,10,0" BorderBrush="Gray" BorderThickness="1" CornerRadius="5">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+                    <Separator Width="20" VerticalAlignment="Center"/>
 
-                    <Border Grid.Row="0" Background="#2C3E50" Padding="10" CornerRadius="5,5,0,0">
-                        <TextBlock Text="📋 Employees" FontWeight="Bold" FontSize="14" Foreground="White"/>
-                    </Border>
-
-                    <ListBox Grid.Row="1" ItemsSource="{Binding Employees}" 
-                             SelectedItem="{Binding SelectedEmployee}"
-                             Margin="5">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Margin="5">
-                                    <TextBlock FontWeight="Bold">
-                                        <Run Text="{Binding EmployeeType, Mode=OneWay}"/>: <Run Text="{Binding Name, Mode=OneWay}"/>
-                                    </TextBlock>
-                                    <TextBlock FontSize="10" Foreground="Gray">
-                                        💰 <Run Text="{Binding Salary, StringFormat={}{0:C0}, Mode=OneWay}"/> | 
-                                        ⭐ <Run Text="{Binding YearsOfExperience, Mode=OneWay}"/> yrs
-                                    </TextBlock>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-
-                    <WrapPanel Grid.Row="2" Margin="5" HorizontalAlignment="Center">
-                        <Button Content="Delete" Width="60" Margin="2" Click="Delete_Click" Background="#E74C3C" Foreground="White"/>
-                        <Button Content="Save to File" Width="90" Margin="2" Click="SaveFile_Click" Background="#27AE60" Foreground="White"/>
-                        <Button Content="Load from File" Width="95" Margin="2" Click="LoadFile_Click" Background="#3498DB" Foreground="White"/>
-                    </WrapPanel>
-                </Grid>
+                    <TextBlock Text="Employee Plugins:" VerticalAlignment="Center" Margin="5" FontWeight="Bold"
+                               Visibility="{Binding PluginButtons.Count, Converter={StaticResource CountToVis}}"/>
+                    <ItemsControl ItemsSource="{Binding PluginButtons}" Margin="2">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </WrapPanel>
             </Border>
 
-            <!-- Right Panel - Edit Form -->
-            <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" CornerRadius="5">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="320"/>
+                </Grid.ColumnDefinitions>
 
-                    <Border Grid.Row="0" Background="#34495E" Padding="10" CornerRadius="5,5,0,0">
-                        <TextBlock Text="✏️ Edit Employee" FontWeight="Bold" FontSize="14" Foreground="White"/>
-                    </Border>
+                <!-- Left Panel - Employee List -->
+                <Border Grid.Column="0" Margin="0,0,10,0" BorderBrush="Gray" BorderThickness="1" CornerRadius="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="10">
-                            <TextBlock Text="Name:" FontWeight="Bold" Margin="0,5"/>
-                            <TextBox Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Border Grid.Row="0" Background="#2C3E50" Padding="10" CornerRadius="5,5,0,0">
+                            <TextBlock Text="📋 Employees" FontWeight="Bold" FontSize="14" Foreground="White"/>
+                        </Border>
 
-                            <TextBlock Text="Salary:" FontWeight="Bold" Margin="0,10,0,5"/>
-                            <TextBox Text="{Binding EditSalary, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ListBox Grid.Row="1" ItemsSource="{Binding Employees}" 
+                                 SelectedItem="{Binding SelectedEmployee}"
+                                 Margin="5">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="5">
+                                        <TextBlock FontWeight="Bold">
+                                            <Run Text="{Binding EmployeeType, Mode=OneWay}"/>: <Run Text="{Binding Name, Mode=OneWay}"/>
+                                        </TextBlock>
+                                        <TextBlock FontSize="10" Foreground="Gray">
+                                            💰 <Run Text="{Binding Salary, StringFormat={}{0:C0}, Mode=OneWay}"/> | 
+                                            ⭐ <Run Text="{Binding YearsOfExperience, Mode=OneWay}"/> yrs
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
 
-                            <TextBlock Text="Experience (years):" FontWeight="Bold" Margin="0,10,0,5"/>
-                            <TextBox Text="{Binding EditExperience, UpdateSourceTrigger=PropertyChanged}"/>
+                        <WrapPanel Grid.Row="2" Margin="5" HorizontalAlignment="Center">
+                            <Button Content="Delete" Width="60" Margin="2" Click="Delete_Click" Background="#E74C3C" Foreground="White"/>
+                            <Button Content="Save to File" Width="90" Margin="2" Click="SaveFile_Click" Background="#27AE60" Foreground="White"/>
+                            <Button Content="Load from File" Width="95" Margin="2" Click="LoadFile_Click" Background="#3498DB" Foreground="White"/>
+                        </WrapPanel>
+                    </Grid>
+                </Border>
 
-                            <TextBlock Text="{Binding Prop1Label}" FontWeight="Bold" Margin="0,10,0,5"/>
-                            <TextBox Text="{Binding Prop1Value, UpdateSourceTrigger=PropertyChanged}"/>
+                <!-- Right Panel - Edit Form -->
+                <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" CornerRadius="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                            <TextBlock Text="{Binding Prop2Label}" FontWeight="Bold" Margin="0,10,0,5"
-                                       Visibility="{Binding ShowProp2, Converter={StaticResource BoolToVis}}"/>
-                            <TextBox Text="{Binding Prop2Value, UpdateSourceTrigger=PropertyChanged}"
-                                     Visibility="{Binding ShowProp2, Converter={StaticResource BoolToVis}}"/>
+                        <Border Grid.Row="0" Background="#34495E" Padding="10" CornerRadius="5,5,0,0">
+                            <TextBlock Text="✏️ Edit Employee" FontWeight="Bold" FontSize="14" Foreground="White"/>
+                        </Border>
 
-                            <TextBlock Text="{Binding Prop3Label}" FontWeight="Bold" Margin="0,10,0,5"
-                                       Visibility="{Binding ShowProp3, Converter={StaticResource BoolToVis}}"/>
-                            <TextBox Text="{Binding Prop3Value, UpdateSourceTrigger=PropertyChanged}"
-                                     Visibility="{Binding ShowProp3, Converter={StaticResource BoolToVis}}"/>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="10">
+                                <TextBlock Text="Name:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBox Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"/>
 
-                            <Button Content="💾 Save Changes" Margin="0,20,0,0" Height="35" 
-                                    Click="Save_Click" Background="#27AE60" Foreground="White"/>
-                        </StackPanel>
-                    </ScrollViewer>
-                </Grid>
+                                <TextBlock Text="Salary:" FontWeight="Bold" Margin="0,10,0,5"/>
+                                <TextBox Text="{Binding EditSalary, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <TextBlock Text="Experience (years):" FontWeight="Bold" Margin="0,10,0,5"/>
+                                <TextBox Text="{Binding EditExperience, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <TextBlock Text="{Binding Prop1Label}" FontWeight="Bold" Margin="0,10,0,5"/>
+                                <TextBox Text="{Binding Prop1Value, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <TextBlock Text="{Binding Prop2Label}" FontWeight="Bold" Margin="0,10,0,5"
+                                           Visibility="{Binding ShowProp2, Converter={StaticResource BoolToVis}}"/>
+                                <TextBox Text="{Binding Prop2Value, UpdateSourceTrigger=PropertyChanged}"
+                                         Visibility="{Binding ShowProp2, Converter={StaticResource BoolToVis}}"/>
+
+                                <TextBlock Text="{Binding Prop3Label}" FontWeight="Bold" Margin="0,10,0,5"
+                                           Visibility="{Binding ShowProp3, Converter={StaticResource BoolToVis}}"/>
+                                <TextBox Text="{Binding Prop3Value, UpdateSourceTrigger=PropertyChanged}"
+                                         Visibility="{Binding ShowProp3, Converter={StaticResource BoolToVis}}"/>
+
+                                <Button Content="💾 Save Changes" Margin="0,20,0,0" Height="35" 
+                                        Click="Save_Click" Background="#27AE60" Foreground="White"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Status Bar -->
+            <Border Grid.Row="2" Margin="0,10,0,0" Padding="5" Background="#F0F0F0" CornerRadius="5">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Total employees: " />
+                    <TextBlock Text="{Binding Employees.Count}" FontWeight="Bold"/>
+                    <TextBlock Text=" | " Margin="10,0,0,0"/>
+                    <TextBlock Text="Employee Plugins: " />
+                    <TextBlock Text="{Binding PluginButtons.Count}" FontWeight="Bold" Foreground="Green"/>
+                    <TextBlock Text=" | " Margin="10,0,0,0"/>
+                    <TextBlock Text="Data Processors: " />
+                    <TextBlock Text="{Binding ProcessorMenuItems.Count}" FontWeight="Bold" Foreground="Blue"/>
+                    <TextBlock Text=" | " Margin="10,0,0,0"/>
+                    <TextBlock Text="Active: " />
+                    <TextBlock Text="{Binding ActiveProcessorName}" FontWeight="Bold" Foreground="Purple"/>
+                </StackPanel>
             </Border>
         </Grid>
-
-        <!-- Status Bar -->
-        <Border Grid.Row="2" Margin="0,10,0,0" Padding="5" Background="#F0F0F0" CornerRadius="5">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Total employees: " />
-                <TextBlock Text="{Binding Employees.Count}" FontWeight="Bold"/>
-                <TextBlock Text=" | " Margin="10,0,0,0"/>
-                <TextBlock Text="Plugins loaded: " />
-                <TextBlock Text="{Binding PluginButtons.Count}" FontWeight="Bold" Foreground="Green"/>
-                <TextBlock Text=" | " Margin="10,0,0,0"/>
-                <TextBlock Text="Status: " />
-                <TextBlock Text="{Binding PluginStatus}" Foreground="Blue"/>
-            </StackPanel>
-        </Border>
-    </Grid>
+    </DockPanel>
 </Window>

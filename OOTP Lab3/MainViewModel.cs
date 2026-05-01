@@ -19,8 +19,12 @@ namespace OOTP_Lab3
         private readonly PluginManager _pluginManager;
 
         public PluginManager PluginManager => _pluginManager;
+
         public ObservableCollection<IEmployee> Employees { get; set; } = new ObservableCollection<IEmployee>();
         public ObservableCollection<UIElement> PluginButtons { get; set; } = new ObservableCollection<UIElement>();
+
+        // Collection for data processor plugins
+        public ObservableCollection<UIElement> ProcessorMenuItems { get; set; } = new ObservableCollection<UIElement>();
 
         private IEmployee _selectedEmployee;
         public IEmployee SelectedEmployee
@@ -70,12 +74,33 @@ namespace OOTP_Lab3
             set { _pluginStatus = value; OnPropertyChanged(); }
         }
 
+        // Active data processor
+        private IDataProcessor _activeProcessor;
+        public IDataProcessor ActiveProcessor
+        {
+            get => _activeProcessor;
+            set
+            {
+                _activeProcessor = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ActiveProcessorName));
+                OnPropertyChanged(nameof(IsProcessorActive));
+            }
+        }
+
+        public string ActiveProcessorName => _activeProcessor?.PluginName ?? "None";
+        public bool IsProcessorActive => _activeProcessor != null && _activeProcessor.IsEnabled;
+
+        // Collection of all loaded data processors
+        private List<IDataProcessor> _dataProcessors = new List<IDataProcessor>();
+
         public MainViewModel()
         {
             LoadSampleData();
 
             _pluginManager = new PluginManager();
             _pluginManager.PluginLoaded += OnPluginLoaded;
+            _pluginManager.DataProcessorLoaded += OnDataProcessorLoaded;
             _pluginManager.LoadAllPlugins(this);
 
             PluginStatus = $"Loaded {_pluginManager.LoadedPlugins.Count} plugins";
@@ -89,10 +114,25 @@ namespace OOTP_Lab3
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     PluginButtons.Add(uiElement);
-                   
                     PluginStatus = $"Loaded {_pluginManager.LoadedPlugins.Count} plugins";
                 });
             }
+        }
+
+        private void OnDataProcessorLoaded(object sender, IDataProcessor processor)
+        {
+            _dataProcessors.Add(processor);
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var menuItem = processor.GetUIElement();
+                if (menuItem != null)
+                {
+                    ProcessorMenuItems.Add(menuItem);
+                }
+
+                ShowMessage($"Data processor '{processor.PluginName}' loaded!", "Processor Loaded");
+            });
         }
 
         private void LoadSampleData()
@@ -208,7 +248,6 @@ namespace OOTP_Lab3
 
         private IEmployee TryCreatePluginEmployee(string typeName)
         {
-
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 var type = assembly.GetTypes()
@@ -243,11 +282,19 @@ namespace OOTP_Lab3
             try
             {
                 var serializer = new TextSerializer();
-                var lines = Employees.Select(e =>
+                var lines = Employees.Select(e => serializer.SerializeDynamic(e));
+
+                // Combine all data into a single string
+                var allData = string.Join(Environment.NewLine, lines);
+
+                // Apply processor before saving
+                if (ActiveProcessor != null && ActiveProcessor.IsEnabled)
                 {
-                    return serializer.SerializeDynamic(e);
-                });
-                File.WriteAllLines(path, lines);
+                    allData = ActiveProcessor.ProcessBeforeSave(allData);
+                    ShowMessage($"Data encrypted with {ActiveProcessor.PluginName}", "Encryption Applied");
+                }
+
+                File.WriteAllText(path, allData);
                 MessageBox.Show($"Successfully saved {Employees.Count} employees", "Success");
             }
             catch (Exception ex)
@@ -262,7 +309,17 @@ namespace OOTP_Lab3
 
             try
             {
-                var lines = File.ReadAllLines(path);
+                // Read all data
+                var allData = File.ReadAllText(path);
+
+                // Apply processor after loading
+                if (ActiveProcessor != null && ActiveProcessor.IsEnabled)
+                {
+                    allData = ActiveProcessor.ProcessAfterLoad(allData);
+                    ShowMessage($"Data decrypted with {ActiveProcessor.PluginName}", "Decryption Applied");
+                }
+
+                var lines = allData.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
                 var newList = new ObservableCollection<IEmployee>();
 
                 foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l)))
@@ -301,6 +358,7 @@ namespace OOTP_Lab3
             OnPropertyChanged(nameof(Employees));
         }
 
+        // IPluginHost implementation
         public void AddEmployee(IEmployee employee)
         {
             if (employee != null)
@@ -332,6 +390,41 @@ namespace OOTP_Lab3
         public void SelectEmployee(IEmployee employee) => SelectedEmployee = employee;
         public void SerializeToFile(string path) => SaveToFile(path);
         public void DeserializeFromFile(string path) => LoadFromFile(path);
+
+        // Data processor methods
+        public void RegisterDataProcessor(IDataProcessor processor)
+        {
+            if (!_dataProcessors.Contains(processor))
+            {
+                _dataProcessors.Add(processor);
+            }
+        }
+
+        public void UnregisterDataProcessor(IDataProcessor processor)
+        {
+            _dataProcessors.Remove(processor);
+            if (ActiveProcessor == processor)
+            {
+                ActiveProcessor = null;
+            }
+        }
+
+        public IDataProcessor GetActiveDataProcessor()
+        {
+            return ActiveProcessor;
+        }
+
+        public void SetActiveDataProcessor(IDataProcessor processor)
+        {
+            // Disable previously active processor
+            if (ActiveProcessor != null && ActiveProcessor != processor)
+            {
+                ActiveProcessor.IsEnabled = false;
+            }
+
+            ActiveProcessor = processor;
+            ShowMessage($"Active processor set to: {processor.PluginName}", "Processor Changed");
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)

@@ -15,5 +15,11 @@ namespace OOTP_Lab3.Contracts
         void SelectEmployee(IEmployee employee);
         void SerializeToFile(string path);
         void DeserializeFromFile(string path);
+
+        // New methods for data processor plugins
+        void RegisterDataProcessor(IDataProcessor processor);
+        void UnregisterDataProcessor(IDataProcessor processor);
+        IDataProcessor GetActiveDataProcessor();
+        void SetActiveDataProcessor(IDataProcessor processor);
     }
 }

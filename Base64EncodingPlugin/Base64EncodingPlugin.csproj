@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\OOTP Lab3\OOTP Lab3.csproj" />
+	</ItemGroup>
+
+	<Target Name="CopyToPluginsFolder" AfterTargets="Build">
+		<MakeDir Directories="..\OOTP Lab3\bin\$(Configuration)\net8.0-windows\Plugins\" />
+		<Copy SourceFiles="$(TargetPath)"
+			  DestinationFolder="..\OOTP Lab3\bin\$(Configuration)\net8.0-windows\Plugins\" />
+	</Target>
+
+</Project>
