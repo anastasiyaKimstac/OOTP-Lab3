@@ -18,16 +18,6 @@ namespace SeniorDeveloperPlugin
         {
             _host = host;
 
-            // Отладочный вывод в консоль
-            System.Diagnostics.Debug.WriteLine("=========================================");
-            System.Diagnostics.Debug.WriteLine("Senior Developer Plugin INITIALIZED!");
-            System.Diagnostics.Debug.WriteLine($"Plugin ID: {PluginId}");
-            System.Diagnostics.Debug.WriteLine($"Plugin Name: {PluginName}");
-            System.Diagnostics.Debug.WriteLine($"Plugin Version: {Version}");
-            System.Diagnostics.Debug.WriteLine("=========================================");
-
-            // Показать сообщение пользователю
-            host.ShowMessage($"Plugin '{PluginName}' v{Version} loaded!", "Plugin Loaded");
         }
 
         public UIElement GetUIElement()
@@ -50,7 +40,7 @@ namespace SeniorDeveloperPlugin
 
         private void AddSeniorDeveloper_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("Senior Dev button CLICKED!");
+            //System.Diagnostics.Debug.WriteLine("Senior Dev button CLICKED!");
 
             var seniorDev = new SeniorDeveloper();
             _host.AddEmployee(seniorDev);
@@ -62,7 +52,7 @@ namespace SeniorDeveloperPlugin
 
         public void Shutdown()
         {
-            System.Diagnostics.Debug.WriteLine("Senior Developer Plugin SHUTDOWN");
+            //System.Diagnostics.Debug.WriteLine("Senior Developer Plugin SHUTDOWN");
             if (_addButton != null)
             {
                 _addButton.Click -= AddSeniorDeveloper_Click;

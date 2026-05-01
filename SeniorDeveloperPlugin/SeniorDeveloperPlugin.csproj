@@ -11,9 +11,9 @@
 	</ItemGroup>
 
 	<Target Name="CopyToPluginsFolder" AfterTargets="Build">
-		<MakeDir Directories="..\OOTP_Lab3\bin\$(Configuration)\net8.0-windows\Plugins\" />
+		<MakeDir Directories="..\OOTP Lab3\bin\$(Configuration)\net8.0-windows\Plugins\" />
 		<Copy SourceFiles="$(TargetPath)"
-			  DestinationFolder="..\OOTP_Lab3\bin\$(Configuration)\net8.0-windows\Plugins\" />
+			  DestinationFolder="..\OOTP Lab3\bin\$(Configuration)\net8.0-windows\Plugins\" />
 	</Target>
 
 </Project>

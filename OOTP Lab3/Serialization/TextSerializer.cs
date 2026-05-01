@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using OOTP_Lab3.Models;
 
@@ -43,44 +45,50 @@ namespace OOTP_Lab3.Serialization
         /// </summary>
         public string SerializeDynamic(IEmployee employee)
         {
-            var type = employee.GetType();
-            var typeName = type.Name;
+            if (employee == null) throw new ArgumentNullException(nameof(employee));
 
-            // Try to use specific Visit method if available
-            var method = this.GetType().GetMethod($"Visit", new[] { type });
-            if (method != null)
+            var type = employee.GetType();
+
+            // Пытаемся найти подходящий метод Visit для конкретного типа
+            var method = this.GetType().GetMethod("Visit", new[] { type });
+            if (method != null && method.DeclaringType == this.GetType())
             {
-                return (string)method.Invoke(this, new object[] { employee });
+                try
+                {
+                    return (string)method.Invoke(this, new object[] { employee });
+                }
+                catch
+                {
+                    // Если не удалось, используем рефлексию
+                }
             }
 
-            // Fallback: use reflection for plugin types
-            return SerializeViaReflection(employee, typeName);
+            // Универсальная сериализация для любых типов
+            return SerializeViaReflection(employee);
         }
 
-        private string SerializeViaReflection(IEmployee employee, string typeName)
+        private string SerializeViaReflection(IEmployee employee)
         {
-            var id = employee.Id;
-            var name = employee.Name;
-            var salary = Format(employee.Salary);
-            var experience = employee.YearsOfExperience;
+            var parts = new List<string>();
+            parts.Add(employee.GetType().Name);
+            parts.Add(employee.Id.ToString());
+            parts.Add(employee.Name);
+            parts.Add(employee.Salary.ToString(CultureInfo.InvariantCulture));
+            parts.Add(employee.YearsOfExperience.ToString());
 
-            // Get additional properties via reflection
-            var props = employee.GetType().GetProperties();
-            var additionalValues = new System.Collections.Generic.List<string>();
+            // Добавляем все дополнительные свойства
+            var properties = employee.GetType().GetProperties()
+                .Where(p => p.Name != "Id" && p.Name != "Name" && p.Name != "Salary" &&
+                           p.Name != "YearsOfExperience" && p.Name != "EmployeeType")
+                .OrderBy(p => p.Name);
 
-            foreach (var prop in props)
+            foreach (var prop in properties)
             {
-                var propName = prop.Name;
-                // Skip base properties
-                if (propName == "Id" || propName == "Name" || propName == "Salary" ||
-                    propName == "YearsOfExperience" || propName == "EmployeeType")
-                    continue;
-
                 var value = prop.GetValue(employee)?.ToString() ?? "";
-                additionalValues.Add(value);
+                parts.Add(value);
             }
 
-            return $"{typeName}|{id}|{name}|{salary}|{experience}|{string.Join("|", additionalValues)}";
+            return string.Join("|", parts);
         }
     }
 }

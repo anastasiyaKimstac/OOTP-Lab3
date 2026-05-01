@@ -43,14 +43,12 @@ namespace SeniorDeveloperPlugin
             };
         }
 
-        // For serialization
-        public string Serialize()
+        // Статический метод для десериализации (нужен для автоматической регистрации)
+        public static IEmployee Deserialize(string[] parts)
         {
-            return $"SeniorDeveloper|{Id}|{Name}|{Salary}|{YearsOfExperience}|{MainLanguage}|{ProjectsCompleted}|{Seniority}|{MentoredJuniors}|{Specialization}";
-        }
+            if (parts.Length < 10)
+                throw new ArgumentException($"Expected at least 10 parts, got {parts.Length}");
 
-        public static SeniorDeveloper Deserialize(string[] parts)
-        {
             return new SeniorDeveloper
             {
                 Id = Guid.Parse(parts[1]),
@@ -63,6 +61,12 @@ namespace SeniorDeveloperPlugin
                 MentoredJuniors = int.Parse(parts[8]),
                 Specialization = parts[9]
             };
+        }
+
+        // Для сериализации (опционально, можно использовать рефлексию)
+        public string Serialize()
+        {
+            return $"SeniorDeveloper|{Id}|{Name}|{Salary}|{YearsOfExperience}|{MainLanguage}|{ProjectsCompleted}|{Seniority}|{MentoredJuniors}|{Specialization}";
         }
     }
 }

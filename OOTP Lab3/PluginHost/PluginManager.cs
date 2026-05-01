@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using OOTP_Lab3.Contracts;
+using OOTP_Lab3.Serialization;
 
 namespace OOTP_Lab3.PluginHost
 {
@@ -14,6 +15,7 @@ namespace OOTP_Lab3.PluginHost
     {
         private readonly List<IPlugin> _loadedPlugins = new List<IPlugin>();
         private readonly string _pluginsDirectory;
+        private readonly TextDeserializer _deserializer;
 
         public IReadOnlyList<IPlugin> LoadedPlugins => _loadedPlugins;
 
@@ -25,6 +27,7 @@ namespace OOTP_Lab3.PluginHost
         public PluginManager(string pluginsDirectory = "Plugins")
         {
             _pluginsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, pluginsDirectory);
+            _deserializer = new TextDeserializer();
 
             if (!Directory.Exists(_pluginsDirectory))
             {
@@ -48,6 +51,8 @@ namespace OOTP_Lab3.PluginHost
             {
                 LoadPluginFromFile(dllPath, host);
             }
+
+            _deserializer.ScanAndRegisterPluginDeserializers();
         }
 
         /// <summary>
@@ -68,7 +73,7 @@ namespace OOTP_Lab3.PluginHost
                     _loadedPlugins.Add(plugin);
                     PluginLoaded?.Invoke(this, plugin);
 
-                    System.Diagnostics.Debug.WriteLine($"Loaded plugin: {plugin.PluginName} v{plugin.Version}");
+                    
                 }
 
                 return true;
