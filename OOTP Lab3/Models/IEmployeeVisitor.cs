@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 
 namespace OOTP_Lab3.Models
 {
@@ -16,5 +12,13 @@ namespace OOTP_Lab3.Models
         string Visit(Designer designer);
         string Visit(Tester tester);
         string Visit(Intern intern);
+    }
+
+    /// <summary>
+    /// Extended visitor interface for plugin support
+    /// </summary>
+    public interface IExtendedEmployeeVisitor : IEmployeeVisitor
+    {
+        string VisitDynamic(object employee);
     }
 }

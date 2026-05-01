@@ -8,6 +8,11 @@
         Title="OOTP_Lab3 - Employee Manager with Plugins" Height="600" Width="900" 
         WindowStartupLocation="CenterScreen">
 
+    <Window.Resources>
+        <local:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <local:CountToVisibilityConverter x:Key="CountToVis"/>
+    </Window.Resources>
+
     <Window.DataContext>
         <local:MainViewModel/>
     </Window.DataContext>
@@ -23,16 +28,16 @@
         <Border Grid.Row="0" Margin="0,0,0,10" Padding="5" Background="#F0F0F0" CornerRadius="5">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Base Types:" VerticalAlignment="Center" Margin="5" FontWeight="Bold"/>
-                <Button Content="➕ Manager" Width="70" Margin="2" Click="Add_Click"/>
-                <Button Content="👨‍💻 Dev" Width="60" Margin="2" Click="Add_Click"/>
-                <Button Content="🎨 Designer" Width="70" Margin="2" Click="Add_Click"/>
-                <Button Content="🧪 Tester" Width="60" Margin="2" Click="Add_Click"/>
-                <Button Content="📚 Intern" Width="60" Margin="2" Click="Add_Click"/>
+                <Button Content="Manager" Width="70" Margin="2" Click="Add_Click"/>
+                <Button Content="Developer" Width="70" Margin="2" Click="Add_Click"/>
+                <Button Content="Designer" Width="70" Margin="2" Click="Add_Click"/>
+                <Button Content="Tester" Width="60" Margin="2" Click="Add_Click"/>
+                <Button Content="Intern" Width="60" Margin="2" Click="Add_Click"/>
 
-                <Separator Width="20"/>
+                <Separator Width="20" VerticalAlignment="Center"/>
 
-                <TextBlock Text="Plugins:" VerticalAlignment="Center" Margin="5" FontWeight="Bold" 
-                           Visibility="{Binding PluginButtons.Count, Converter={StaticResource CountToVisibility}}"/>
+                <TextBlock Text="Plugins:" VerticalAlignment="Center" Margin="5" FontWeight="Bold"
+                           Visibility="{Binding PluginButtons.Count, Converter={StaticResource CountToVis}}"/>
                 <ItemsControl ItemsSource="{Binding PluginButtons}" Margin="2">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -69,7 +74,7 @@
                             <DataTemplate>
                                 <StackPanel Margin="5">
                                     <TextBlock FontWeight="Bold">
-                                        <Run Text="{Binding EmployeeType, Mode=OneWay}"/>: <Run Text="{Binding Name, Mode=TwoWay}"/>
+                                        <Run Text="{Binding EmployeeType, Mode=OneWay}"/>: <Run Text="{Binding Name, Mode=OneWay}"/>
                                     </TextBlock>
                                     <TextBlock FontSize="10" Foreground="Gray">
                                         💰 <Run Text="{Binding Salary, StringFormat={}{0:C0}, Mode=OneWay}"/> | 
@@ -80,11 +85,11 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="5" HorizontalAlignment="Center">
-                        <Button Content="🗑 Delete" Width="60" Margin="2" Click="Delete_Click" Background="#E74C3C" Foreground="White"/>
-                        <Button Content="💿 Save to File" Width="100" Margin="2" Click="SaveFile_Click"/>
-                        <Button Content="📂 Load from File" Width="100" Margin="2" Click="LoadFile_Click"/>
-                    </StackPanel>
+                    <WrapPanel Grid.Row="2" Margin="5" HorizontalAlignment="Center">
+                        <Button Content="Delete" Width="60" Margin="2" Click="Delete_Click" Background="#E74C3C" Foreground="White"/>
+                        <Button Content="Save to File" Width="90" Margin="2" Click="SaveFile_Click" Background="#27AE60" Foreground="White"/>
+                        <Button Content="Load from File" Width="95" Margin="2" Click="LoadFile_Click" Background="#3498DB" Foreground="White"/>
+                    </WrapPanel>
                 </Grid>
             </Border>
 
@@ -115,8 +120,10 @@
                             <TextBlock Text="{Binding Prop1Label}" FontWeight="Bold" Margin="0,10,0,5"/>
                             <TextBox Text="{Binding Prop1Value, UpdateSourceTrigger=PropertyChanged}"/>
 
-                            <TextBlock Text="{Binding Prop2Label}" FontWeight="Bold" Margin="0,10,0,5"/>
-                            <TextBox Text="{Binding Prop2Value, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="{Binding Prop2Label}" FontWeight="Bold" Margin="0,10,0,5"
+                                       Visibility="{Binding ShowProp2, Converter={StaticResource BoolToVis}}"/>
+                            <TextBox Text="{Binding Prop2Value, UpdateSourceTrigger=PropertyChanged}"
+                                     Visibility="{Binding ShowProp2, Converter={StaticResource BoolToVis}}"/>
 
                             <TextBlock Text="{Binding Prop3Label}" FontWeight="Bold" Margin="0,10,0,5"
                                        Visibility="{Binding ShowProp3, Converter={StaticResource BoolToVis}}"/>
@@ -134,11 +141,14 @@
         <!-- Status Bar -->
         <Border Grid.Row="2" Margin="0,10,0,0" Padding="5" Background="#F0F0F0" CornerRadius="5">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Total: " />
+                <TextBlock Text="Total employees: " />
                 <TextBlock Text="{Binding Employees.Count}" FontWeight="Bold"/>
-                <TextBlock Text=" employees | " Margin="10,0,0,0"/>
+                <TextBlock Text=" | " Margin="10,0,0,0"/>
                 <TextBlock Text="Plugins loaded: " />
-                <TextBlock Text="{Binding PluginButtons.Count}" FontWeight="Bold"/>
+                <TextBlock Text="{Binding PluginButtons.Count}" FontWeight="Bold" Foreground="Green"/>
+                <TextBlock Text=" | " Margin="10,0,0,0"/>
+                <TextBlock Text="Status: " />
+                <TextBlock Text="{Binding PluginStatus}" Foreground="Blue"/>
             </StackPanel>
         </Border>
     </Grid>

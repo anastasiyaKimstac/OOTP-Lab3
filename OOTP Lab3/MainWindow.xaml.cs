@@ -15,16 +15,7 @@ namespace OOTP_Lab3
         private void Add_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as System.Windows.Controls.Button;
-            string content = button?.Content.ToString() ?? "";
-
-            // Extract type from button text (remove emojis)
-            string type = content
-                .Replace("➕", "")
-                .Replace("👨‍💻", "")
-                .Replace("🎨", "")
-                .Replace("🧪", "")
-                .Replace("📚", "")
-                .Trim();
+            string type = button?.Content.ToString() ?? "";
 
             ViewModel.AddEmployee(type);
         }

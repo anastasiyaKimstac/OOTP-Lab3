@@ -5,9 +5,6 @@ using OOTP_Lab3.Contracts;
 
 namespace SeniorDeveloperPlugin
 {
-    /// <summary>
-    /// Plugin that adds SeniorDeveloper to the employee hierarchy
-    /// </summary>
     public class SeniorDeveloperPlugin : IPlugin
     {
         private IPluginHost _host;
@@ -20,7 +17,17 @@ namespace SeniorDeveloperPlugin
         public void Initialize(IPluginHost host)
         {
             _host = host;
-            _host.ShowMessage($"Senior Developer Plugin v{Version} loaded!", "Plugin Loaded");
+
+            // Отладочный вывод в консоль
+            System.Diagnostics.Debug.WriteLine("=========================================");
+            System.Diagnostics.Debug.WriteLine("Senior Developer Plugin INITIALIZED!");
+            System.Diagnostics.Debug.WriteLine($"Plugin ID: {PluginId}");
+            System.Diagnostics.Debug.WriteLine($"Plugin Name: {PluginName}");
+            System.Diagnostics.Debug.WriteLine($"Plugin Version: {Version}");
+            System.Diagnostics.Debug.WriteLine("=========================================");
+
+            // Показать сообщение пользователю
+            host.ShowMessage($"Plugin '{PluginName}' v{Version} loaded!", "Plugin Loaded");
         }
 
         public UIElement GetUIElement()
@@ -28,35 +35,34 @@ namespace SeniorDeveloperPlugin
             _addButton = new Button
             {
                 Content = "👨‍💼 Senior Dev",
-                Width = 65,
+                Width = 90,
                 Margin = new Thickness(2),
-                ToolTip = "Add Senior Developer (Plugin)"
+                ToolTip = "Add Senior Developer (Plugin)",
+                FontSize = 11,
+                Background = System.Windows.Media.Brushes.LightGreen
             };
             _addButton.Click += AddSeniorDeveloper_Click;
+
+            System.Diagnostics.Debug.WriteLine("GetUIElement() called - button created");
+
             return _addButton;
         }
 
         private void AddSeniorDeveloper_Click(object sender, RoutedEventArgs e)
         {
-            var seniorDev = new SeniorDeveloper
-            {
-                Name = "New Senior Developer",
-                Salary = 110000,
-                YearsOfExperience = 8,
-                MainLanguage = "C#",
-                ProjectsCompleted = 25,
-                Seniority = "Senior",
-                MentoredJuniors = 5,
-                Specialization = "Backend"
-            };
+            System.Diagnostics.Debug.WriteLine("Senior Dev button CLICKED!");
 
+            var seniorDev = new SeniorDeveloper();
             _host.AddEmployee(seniorDev);
             _host.SelectEmployee(seniorDev);
-            _host.ShowMessage($"{seniorDev.Name} added successfully!", "Employee Added");
+            _host.ShowMessage($"{seniorDev.Name} added successfully!", "Plugin");
+
+            System.Diagnostics.Debug.WriteLine($"Added: {seniorDev.Name}, Salary: {seniorDev.Salary}");
         }
 
         public void Shutdown()
         {
+            System.Diagnostics.Debug.WriteLine("Senior Developer Plugin SHUTDOWN");
             if (_addButton != null)
             {
                 _addButton.Click -= AddSeniorDeveloper_Click;

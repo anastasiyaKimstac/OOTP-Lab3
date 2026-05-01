@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
 using OOTP_Lab3.Models;
 
 namespace OOTP_Lab3.Serialization
 {
     /// <summary>
     /// Deserializes pipe-delimited text back into employee objects
+    /// Supports dynamic types from plugins
     /// </summary>
     public class TextDeserializer
     {
@@ -14,6 +17,18 @@ namespace OOTP_Lab3.Serialization
 
         private static Guid ParseGuid(string value)
             => Guid.Parse(value);
+
+        // Registry for plugin deserializers
+        private static Dictionary<string, Func<string[], IEmployee>> _pluginDeserializers
+            = new Dictionary<string, Func<string[], IEmployee>>();
+
+        /// <summary>
+        /// Register a deserializer for a plugin type
+        /// </summary>
+        public static void RegisterPluginDeserializer(string typeName, Func<string[], IEmployee> deserializer)
+        {
+            _pluginDeserializers[typeName] = deserializer;
+        }
 
         public IEmployee Deserialize(string data)
         {
@@ -71,8 +86,69 @@ namespace OOTP_Lab3.Serialization
                     University = parts[5],
                     Semester = int.Parse(parts[6])
                 },
-                _ => throw new NotSupportedException($"Unknown employee type: {parts[0]}")
+                _ => DeserializePlugin(parts)
             };
+        }
+
+        private IEmployee DeserializePlugin(string[] parts)
+        {
+            var typeName = parts[0];
+
+            // Check if we have a registered deserializer
+            if (_pluginDeserializers.TryGetValue(typeName, out var deserializer))
+            {
+                return deserializer(parts);
+            }
+
+            // Try to create instance via reflection
+            return DeserializeViaReflection(parts, typeName);
+        }
+
+        private IEmployee DeserializeViaReflection(string[] parts, string typeName)
+        {
+            try
+            {
+                // Try to find the type in loaded assemblies
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    var type = assembly.GetType($"SeniorDeveloperPlugin.{typeName}");
+                    if (type != null)
+                    {
+                        var instance = (IEmployee)Activator.CreateInstance(type);
+
+                        // Set properties via reflection
+                        instance.Id = ParseGuid(parts[1]);
+                        instance.Name = parts[2];
+                        instance.Salary = ParseDecimal(parts[3]);
+                        instance.YearsOfExperience = int.Parse(parts[4]);
+
+                        // Set additional properties
+                        var properties = type.GetProperties();
+                        int propIndex = 5;
+                        foreach (var prop in properties)
+                        {
+                            if (prop.Name == "Id" || prop.Name == "Name" || prop.Name == "Salary" ||
+                                prop.Name == "YearsOfExperience" || prop.Name == "EmployeeType")
+                                continue;
+
+                            if (propIndex < parts.Length)
+                            {
+                                var value = Convert.ChangeType(parts[propIndex], prop.PropertyType);
+                                prop.SetValue(instance, value);
+                                propIndex++;
+                            }
+                        }
+
+                        return instance;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to deserialize plugin type {typeName}: {ex.Message}");
+            }
+
+            throw new NotSupportedException($"Unknown employee type: {typeName}");
         }
     }
 }

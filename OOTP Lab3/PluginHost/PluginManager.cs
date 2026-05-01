@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Windows;
 using OOTP_Lab3.Contracts;
 
 namespace OOTP_Lab3.PluginHost
@@ -24,16 +22,10 @@ namespace OOTP_Lab3.PluginHost
         /// </summary>
         public event EventHandler<IPlugin> PluginLoaded;
 
-        /// <summary>
-        /// Event fired when a plugin is unloaded
-        /// </summary>
-        public event EventHandler<IPlugin> PluginUnloaded;
-
         public PluginManager(string pluginsDirectory = "Plugins")
         {
             _pluginsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, pluginsDirectory);
 
-            // Create plugins directory if it doesn't exist
             if (!Directory.Exists(_pluginsDirectory))
             {
                 Directory.CreateDirectory(_pluginsDirectory);
@@ -97,7 +89,6 @@ namespace OOTP_Lab3.PluginHost
             {
                 plugin.Shutdown();
                 _loadedPlugins.Remove(plugin);
-                PluginUnloaded?.Invoke(this, plugin);
                 return true;
             }
             catch (Exception ex)
@@ -105,14 +96,6 @@ namespace OOTP_Lab3.PluginHost
                 System.Diagnostics.Debug.WriteLine($"Failed to unload plugin {plugin.PluginName}: {ex.Message}");
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Scan for new plugins in the directory
-        /// </summary>
-        public void ScanForNewPlugins(IPluginHost host)
-        {
-            throw new NotImplementedException("Dynamic plugin scanning requires AppDomain isolation");
         }
     }
 }

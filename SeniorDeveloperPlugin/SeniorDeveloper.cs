@@ -1,15 +1,13 @@
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using OOTP_Lab3.Contracts;
 using OOTP_Lab3.Models;
+using System;
+using System.Xml.Linq;
 
 namespace SeniorDeveloperPlugin
 {
     /// <summary>
     /// Senior Developer - extended from Developer with additional properties
     /// </summary>
-    public class SeniorDeveloper : Developer, IPluginEmployee
+    public class SeniorDeveloper : Developer
     {
         public string Seniority { get; set; }
         public int MentoredJuniors { get; set; }
@@ -22,24 +20,12 @@ namespace SeniorDeveloperPlugin
             Specialization = "Full Stack";
             Salary = 110000m;
             Name = "New Senior Developer";
+            YearsOfExperience = 8;
+            MainLanguage = "C#";
+            ProjectsCompleted = 15;
         }
 
-        public override string Accept(IEmployeeVisitor visitor)
-        {
-            // If visitor can handle SeniorDeveloper, use that, otherwise fallback to Developer
-            if (visitor is IExtendedEmployeeVisitor extendedVisitor)
-            {
-                return extendedVisitor.Visit(this);
-            }
-            return base.Accept(visitor);
-        }
-
-        private string _employeeType = "SeniorDeveloper";
-        public override string EmployeeType
-        {
-            get => _employeeType;
-            protected set => _employeeType = value;
-        }
+        public override string EmployeeType => "SeniorDeveloper";
 
         public override IEmployee Clone()
         {
@@ -56,13 +42,27 @@ namespace SeniorDeveloperPlugin
                 Specialization = this.Specialization
             };
         }
-    }
 
-    /// <summary>
-    /// Extended visitor for new employee types
-    /// </summary>
-    public interface IExtendedEmployeeVisitor : IEmployeeVisitor
-    {
-        string Visit(SeniorDeveloper seniorDev);
+        // For serialization
+        public string Serialize()
+        {
+            return $"SeniorDeveloper|{Id}|{Name}|{Salary}|{YearsOfExperience}|{MainLanguage}|{ProjectsCompleted}|{Seniority}|{MentoredJuniors}|{Specialization}";
+        }
+
+        public static SeniorDeveloper Deserialize(string[] parts)
+        {
+            return new SeniorDeveloper
+            {
+                Id = Guid.Parse(parts[1]),
+                Name = parts[2],
+                Salary = decimal.Parse(parts[3]),
+                YearsOfExperience = int.Parse(parts[4]),
+                MainLanguage = parts[5],
+                ProjectsCompleted = int.Parse(parts[6]),
+                Seniority = parts[7],
+                MentoredJuniors = int.Parse(parts[8]),
+                Specialization = parts[9]
+            };
+        }
     }
 }
